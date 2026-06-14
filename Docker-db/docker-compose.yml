@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    build: .
+    container_name: mysql-instagram
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: instagram_clone
+      MYSQL_USER: instagram_user
+      MYSQL_PASSWORD: insta123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - instagram-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    build: ../Docker-app
+    container_name: instagram-app
+    ports:
+      - "3000:3000"
+      - "8080:8080"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql-db
+      DB_USER: instagram_user
+      DB_PASSWORD: insta123
+      DB_NAME: instagram_clone
+    networks:
+      - instagram-network
+
+networks:
+  instagram-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
